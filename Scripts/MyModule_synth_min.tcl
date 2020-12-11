@@ -1,5 +1,5 @@
 ## Setup technology files
-include ../Source/Technology/X-FAB_min.tcl
+include ../Scripts/Technology/X-FAB_min.tcl
 ## Setup variables
 set DESIGN filter
 set PARAMS {}
@@ -15,11 +15,11 @@ read_sdc ../Source/filter.sdc
 synthesize -to_mapped
 synthesize -incremental
 ## Write out area and timing reports
-report area > ../Reports/Top_synth_area_report_min
-report timing > ../Reports/Top_synth_timing_report_min
+report area > ../Reports/Synthesis/Top_synth_area_report_min
+report timing > ../Reports/Synthesis/Top_synth_timing_report_min
 ## Write out synthesized Verilog netlist
-write_hdl -mapped > ../Source/Synthesis/filter_synth_min.v
+write_hdl -mapped > ../Outputs/Synthesis/filter_synth_min.v
 ## Write out the SDC file we will take into the place n route tool
-write_sdc > ../Synthesis/Top_out_min.sdc
+write_sdc > ../Outputs/Synthesis/Top_out_min.sdc
 
 gui_show

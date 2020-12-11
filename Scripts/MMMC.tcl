@@ -1,5 +1,5 @@
 ## Timing constraints file from the synthesis
-create_constraint_mode -name CONSTRAINTS -sdc_files {../Synthesis/Top_out.sdc}
+create_constraint_mode -name CONSTRAINTS -sdc_files {../Source/filter_encounter.sdc}
 ## Create timing library sets
 # The siowest corner
 create_library_set -name SLOWlib -timing {/Cadence/Libs/X_FAB/XKIT/xt018/diglibs/D_CELLS_HD/v4_0/liberty_LP5MOS/v4_0_0/PVT_1_80V_range/D_CELLS_HD_LP5MOS_slow_1_62V_175C.lib}

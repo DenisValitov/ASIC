@@ -35,7 +35,6 @@ module filter_tb;
   reg signed [9:0] output_rsvd_expected;  // sfix10_En3
   reg signed [9:0] output_rsvd_expected1;  // sfix10_En3
   reg signed [31:0] status_output_rsvd_expected;  // sfix32
-  //wire signed [9:0] output_rsvd_ref;  // sfix10_En3
   reg signed [9:0] output_rsvd_ref;  // sfix10_En3
   reg  output_rsvd_testFailure;  // ufix1
   wire testFailure;  // ufix1
@@ -251,10 +250,7 @@ module filter_tb;
     end
 
   always @(posedge clk)
-   // output_rsvd_expected1 <= output_rsvd_expected;
     output_rsvd_ref  <= output_rsvd_expected;
-
- // assign output_rsvd_ref = output_rsvd_expected;
 
   always @(posedge clk or posedge reset)
     begin : output_rsvd_checker
