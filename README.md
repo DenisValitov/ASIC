@@ -17,12 +17,12 @@ ___
  *	`../Scripts/MyModule_synth_min.tcl`
  *	`../Scripts/MyModule_synth_max.tcl`
 
-> Timing и verification отчеты можно посмотреть в *Reports/Synthesis/*, а результаты топологии в *Outputs/Synthesis/*. 
+> Timing и area отчеты можно посмотреть в *Reports/Synthesis/*, а результаты топологии в *Outputs/Synthesis/*. 
 ________   
     
 Для создания топологии модели создайте папку *Encounter/*, из терминала запустите скрипт:   
  `Encounter ../Scripts/FIRBandPassFilter_PaR_2.tcl`
-> Timing и area отчеты можно посмотреть в *Reports/Encounter/*, а результаты синтеза в *Outputs/Encounter/*.
+> Timing и verification отчеты можно посмотреть в *Reports/Encounter/*, а результаты синтеза в *Outputs/Encounter/*.
 _______
 Для моделирования после синтеза модели и создания топологии создайте папку *Incisive/*, через терминал запустите команду:  
  `Incisive/`
