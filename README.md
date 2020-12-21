@@ -20,7 +20,7 @@ ___
 > Timing и verification отчеты можно посмотреть в *Reports/Synthesis/*, а результаты топологии в *Outputs/Synthesis/*. 
 ________   
     
-Для создания топологии модели создайте папку *Encounter/*, из терминала запустите скрипт: 
+Для создания топологии модели создайте папку *Encounter/*, из терминала запустите скрипт:   
  `Encounter ../Scripts/FIRBandPassFilter_PaR_2.tcl`
 > Timing и area отчеты можно посмотреть в *Reports/Encounter/*, а результаты синтеза в *Outputs/Encounter/*.
 _______
