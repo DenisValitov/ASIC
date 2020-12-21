@@ -28,6 +28,7 @@ _______
  `Incisive/`
 >Не забывайте проверить файлы, необходимые для моделирования: 
 > *	Source/filter_tb.v
+> *	Source/filter_tb_encounter.v
 > *	Source/input_rsvd.dat
 > *	Source/output_rsvd_expected.dat
 _______
