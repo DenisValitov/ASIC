@@ -15,8 +15,6 @@
 
 set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
 suppressMessage ENCEXT-2799
-set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
-suppressMessage ENCEXT-2799
 win
 set ::TimeLib::tsgMarkCellLatchConstructFlag 1
 set conf_qxconf_file NULL
@@ -38,21 +36,19 @@ set pegDetailResScaleFactor 1.000000
 set timing_library_float_precision_tol 0.000010
 set timing_library_load_pin_cap_indices {}
 set tso_post_client_restore_command {update_timing ; write_eco_opt_db ;}
+#Begin initializing design
 init_design
-fit
-getIoFlowFlag
-setIoFlowFlag 0
+#Specify floorplan
 floorPlan -fplanOrigin center -site core_hd -r 0.982237826467 0.7 10.08 10.37 10.08 10.37
 uiSetTool select
-getIoFlowFlag
-fit
 loadIoFile ../Source/filter_pin
-fit
+#Define power global nets
 clearGlobalNets
 globalNetConnect VDD -type pgpin -pin vdd -inst * -module {}
 globalNetConnect VSS -type pgpin -pin gnd -inst * -module {}
 globalNetConnect VDD -type tiehi -pin * -inst * -module {}
 globalNetConnect VSS -type tielo -pin * -inst * -module {}
+#Create power and ground rings
 set sprCreateIeRingNets {}
 set sprCreateIeRingLayers {}
 set sprCreateIeRingWidth 1.0
@@ -61,6 +57,7 @@ set sprCreateIeRingOffset 1.0
 set sprCreateIeRingThreshold 1.0
 set sprCreateIeRingJogDistance 1.0
 addRing -skip_via_on_wire_shape Noshape -skip_via_on_pin Standardcell -stacked_via_top_layer METTPL -type core_rings -jog_distance 3.15 -threshold 3.15 -nets {VDD VSS} -follow core -stacked_via_bottom_layer MET1 -layer {bottom MET1 top MET1 right MET2 left MET2} -width 3 -spacing {bottom 0.23 top 0.23 right 0.28 left 0.28} -offset 3.15
+#Create power grid
 set sprCreateIeStripeNets {}
 set sprCreateIeStripeLayers {}
 set sprCreateIeStripeWidth 10.0
@@ -68,30 +65,39 @@ set sprCreateIeStripeSpacing 2.0
 set sprCreateIeStripeThreshold 1.0
 addStripe -skip_via_on_wire_shape Noshape -block_ring_top_layer_limit MET3 -max_same_layer_jog_length 6 -padcore_ring_bottom_layer_limit MET1 -set_to_set_distance 100 -skip_via_on_pin Standardcell -stacked_via_top_layer METTPL -padcore_ring_top_layer_limit MET3 -spacing 0.28 -merge_stripes_value 3.15 -layer MET2 -block_ring_bottom_layer_limit MET1 -width 3 -nets {VDD VSS} -stacked_via_bottom_layer MET1
 sroute -connect { blockPin padPin padRing corePin floatingStripe } -layerChangeRange { MET1 METTPL } -blockPinTarget { nearestTarget } -padPinPortConnect { allPort oneGeom } -padPinTarget { nearestTarget } -corePinTarget { firstAfterRowEnd } -floatingStripeTarget { blockring padring ring stripe ringpin blockpin followpin } -allowJogging 1 -crossoverViaLayerRange { MET1 METTPL } -nets { VDD VSS } -allowLayerChange 1 -blockPin useLef -targetViaLayerRange { MET1 METTPL }
+# Create PrePlace setup Timing report
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -prePlace -idealClock -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_prePlace -outDir ../Reports/Encounter/timingReports
+# Place standart cells
 setPlaceMode -fp false
 placeDesign -inPlaceOpt
+# Create PreCTS setup Timing report
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -preCTS -idealClock -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_preCTS -outDir ../Reports/Encounter/timingReports
+# Create PrePlace hold Timing report
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -preCTS -hold -idealClock -pathReports -slackReports -numPaths 50 -prefix filter_preCTS -outDir ../Reports/Encounter/timingReports
+# PreCTS optimization
 setOptMode -fixCap true -fixTran true -fixFanoutLoad true
 optDesign -preCTS
-panPage 0 1
-panPage 0 1
-panPage 0 -1
-panPage 0 -1
+# Clock tree synthesis
 createClockTreeSpec -bufferList {BUHDX0 BUHDX1 BUHDX12 BUHDX2 BUHDX3 BUHDX4 BUHDX6 BUHDX8 DLY1HDX0 DLY1HDX1 DLY2HDX0 DLY2HDX1 DLY4HDX0 DLY4HDX1 DLY8HDX0 DLY8HDX1 INHDX0 INHDX1 INHDX12 INHDX2 INHDX3 INHDX4 INHDX6 INHDX8 STEHDX0} -file Clock.ctstch
 setCTSMode -engine ck
 clockDesign -specFile Clock.ctstch -outDir ../Reports/Encounter/clock_report -fixedInstBeforeCTS
+# Create postCTS setup Timing report
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -postCTS -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_postCTS -outDir ../Reports/Encounter/timingReports
+# Create postPlace hold Timing report
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -postCTS -hold -pathReports -slackReports -numPaths 50 -prefix filter_postCTS -outDir ../Reports/Encounter/timingReports
+# PostCTS optimization
 setOptMode -fixCap true -fixTran true -fixFanoutLoad true
 optDesign -postCTS
 optDesign -postCTS -hold
+setOptMode -fixCap false -fixTran true -fixFanoutLoad true
+optDesign -postCTS -incr
+optDesign -postCTS -hold -incr
+# Rooting
 setNanoRouteMode -quiet -timingEngine {}
 setNanoRouteMode -quiet -routeWithSiPostRouteFix 0
 setNanoRouteMode -quiet -drouteStartIteration default
@@ -102,25 +108,30 @@ setNanoRouteMode -quiet -routeWithTimingDriven false
 setNanoRouteMode -quiet -routeWithSiDriven false
 routeDesign -globalDetail
 setAnalysisMode -analysisType onChipVariation -skew true -clockPropagation sdcControl
-setAnalysisMode -analysisType onChipVariation -skew true -clockPropagation sdcControl
-redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
-timeDesign -postRoute -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_postRoute -outDir ../Reports/Encounter/timingReports
-redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
-timeDesign -postRoute -hold -pathReports -slackReports -numPaths 50 -prefix filter_postRoute -outDir ../Reports/Encounter/timingReports
+# PostCTS optimization
 setOptMode -fixCap true -fixTran true -fixFanoutLoad true
 optDesign -postRoute
 optDesign -postRoute -hold
-panPage 0 1
-panPage 0 1
-panPage 0 1
-panPage 0 -1
-panPage 0 -1
-panPage 0 -1
-#setOptMode -fixCap true -fixTran true -fixFanoutLoad true
-#optDesign -postRoute
-#optDesign -postRoute -hold
+setOptMode -fixCap false -fixTran true -fixFanoutLoad true
+optDesign -postRoute -incr
+optDesign -postRoute -hold -incr
+# Create postPlace setup Timing report
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_postRoute -outDir ../Reports/Encounter/timingReports
+# Create postPlace hold Timing report
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -hold -pathReports -slackReports -numPaths 50 -prefix filter_postRoute -outDir ../Reports/Encounter/timingReports
+# Signoff
 getFillerMode -quiet
 addFiller -cell FEED7HD FEED5HD FEED3HD FEED2HD FEED25HD FEED1HD FEED15HD FEED10HD DECAP7HD DECAP5HD DECAP3HD DECAP25HD DECAP15HD DECAP10HD -prefix FILLER
+extractRC
+# Create Signoff setup Timing report
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -signoff -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_signOff -outDir ../Reports/Encounter/timingReports
+# Create Signoff hold Timing report
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -signoff -hold -pathReports -slackReports -numPaths 50 -prefix filter_signOff -outDir ../Reports/Encounter/timingReports
+# Verifications
 setVerifyGeometryMode -area { 0 0 0 0 } -minWidth true -minSpacing true -minArea true -sameNet true -short true -overlap true -offRGrid false -offMGrid true -mergedMGridCheck true -minHole true -implantCheck true -minimumCut true -minStep true -viaEnclosure true -antenna false -insuffMetalOverlap true -pinInBlkg false -diffCellViol true -sameCellViol false -padFillerCellsOverlap true -routingBlkgPinOverlap true -routingCellBlkgOverlap true -regRoutingOnly false -stackedViasOnRegNet false -wireExt true -useNonDefaultSpacing false -maxWidth true -maxNonPrefLength -1 -error 1000
 verifyGeometry
 setVerifyGeometryMode -area { 0 0 0 0 } -report ../Reports/Encounter/filter.geometry.rpt
@@ -129,13 +140,9 @@ verifyConnectivity -type all -report ../Reports/Encounter/filter.connectivity.rp
 verifyProcessAntenna -reportfile ../Reports/Encounter/filter.antenna.rpt -error 1000
 setExtractRCMode -engine postRoute -effortLevel signoff
 setExtractRCMode -engine postRoute -effortLevel signoff
-extractRC
-redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
-timeDesign -signoff -pathReports -drvReports -slackReports -numPaths 50 -prefix filter_signOff -outDir ../Reports/Encounter/timingReports
-redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
-timeDesign -signoff -hold -pathReports -slackReports -numPaths 50 -prefix filter_signOff -outDir ../Reports/Encounter/timingReports
 all_hold_analysis_views 
 all_setup_analysis_views 
+# Save output files
 saveNetlist ../Outputs/Encounter/filter_netlist.v
 write_sdf ../Outputs/Encounter/filter.sdf
 getFillerMode -quiet
